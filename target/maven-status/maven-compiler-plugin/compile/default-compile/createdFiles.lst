@@ -1,0 +1,9 @@
+de\domesoft\envy\SystemPropertiesSource.class
+de\domesoft\envy\Envy.class
+de\domesoft\envy\MissingConfigException.class
+de\domesoft\envy\ConfigConversionException.class
+de\domesoft\envy\PropertiesFileSource.class
+de\domesoft\envy\ConfigValue.class
+de\domesoft\envy\EnvyBuilder.class
+de\domesoft\envy\EnvSource.class
+de\domesoft\envy\ConfigSource.class
