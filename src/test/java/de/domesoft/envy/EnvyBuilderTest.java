@@ -61,4 +61,15 @@ public class EnvyBuilderTest {
         assertEquals("DEFAULT", envy.get("test.test", "DEFAULT"));
         assertEquals(30, envy.getInt("app.timeout", 55));
     }
+
+    @Test
+    void testClasspathPropertiesSource() {
+        Envy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
+
+        assertEquals(Optional.of("localhorst"), envy.get("db.host"));
+        assertEquals(Optional.of(false), envy.getBoolean("app.debug"));
+        assertEquals(5555, envy.getInt("app.poort", 5555));
+    }
 }
