@@ -72,4 +72,16 @@ public class EnvyBuilderTest {
         assertEquals(Optional.of(false), envy.getBoolean("app.debug"));
         assertEquals(5555, envy.getInt("app.poort", 5555));
     }
+
+    @Test
+    void testPrefixEnvy() {
+        Envy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
+        PrefixEnvy prefixEnvy = new PrefixEnvy(envy, "db.");
+
+        assertEquals(Optional.of(54325), prefixEnvy.getInt("port"));
+        assertEquals(Optional.of("localhorst"), prefixEnvy.get("host"));
+        assertEquals("localhorst", prefixEnvy.require("host"));
+    }
 }
