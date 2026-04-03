@@ -16,6 +16,10 @@ public class Envy {
         return new EnvyBuilder();
     }
 
+    public String require(String key) {
+        return get(key).orElseThrow(() -> new MissingConfigException("Missing required config key: " + key));
+    }
+
     public Optional<String> get(String key) {
         for (ConfigSource source : sources) {
             Optional<String> value = source.get(key);
@@ -26,8 +30,8 @@ public class Envy {
         return Optional.empty();
     }
 
-    public String require(String key) {
-        return get(key).orElseThrow(() -> new MissingConfigException("Missing required config key: " + key));
+    public String get(String key, String defaultValue) {
+        return get(key).orElse(defaultValue);
     }
 
     public Optional<Integer> getInt(String key) {
@@ -40,6 +44,10 @@ public class Envy {
         });
     }
 
+    public int getInt(String key, int defaultValue) {
+        return getInt(key).orElse(defaultValue);
+    }
+
     public Optional<Long> getLong(String key) {
         return get(key).map(value -> {
             try {
@@ -48,6 +56,10 @@ public class Envy {
                 throw new ConfigConversionException("Could not convert key '" + key + "' to long: " + value, e);
             }
         });
+    }
+
+    public long getLong(String key, long defaultValue) {
+        return getLong(key).orElse(defaultValue);
     }
 
     public Optional<Double> getDouble(String key) {
@@ -60,7 +72,30 @@ public class Envy {
         });
     }
 
+    public double getDouble(String key, double defaultValue) {
+        return getDouble(key).orElse(defaultValue);
+    }
+
     public Optional<Boolean> getBoolean(String key) {
-        return get(key).map(Boolean::parseBoolean);
+        return get(key).map(value -> {
+            if ("true".equalsIgnoreCase(value)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(value)) {
+                return false;
+            }
+            throw new ConfigConversionException(
+                    "Could not convert key '" + key + "' to boolean: " + value,
+                    null
+            );
+        });
+    }
+
+    public boolean getBoolean(String key, boolean defaultValue) {
+        return getBoolean(key).orElse(defaultValue);
+    }
+
+    public boolean has(String key) {
+        return get(key).isPresent();
     }
 }

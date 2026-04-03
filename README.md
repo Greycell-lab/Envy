@@ -2,125 +2,226 @@
 
 Tiny Java configuration library with explicit source priority.
 
-Envy is a small Java library for reading configuration values from multiple sources such as system properties, environment variables, and `.properties` files. It resolves values in the exact order the sources are added, so the first matching value wins.
+Envy is a small Java library for reading configuration values from multiple sources such as system properties, environment variables, and `.properties` files. Values are resolved in the exact order the sources are added to the builder, so the first matching source wins.
 
 ## Features
 
-- Explicit source priority, the order of `.source(...)` calls defines precedence
-- Supports JVM system properties via `System.getProperty(...)`
-- Supports environment variables via `System.getenv(...)`
-- Supports Java `.properties` files using `java.util.Properties`
-- Distinguishes between required values and optional values
-- Typed getters for `String`, `int`, `long`, `double`, and `boolean`
+- Explicit source priority
+- JVM system properties support
+- Environment variable support
+- `.properties` file support
+- Required vs optional configuration access
+- Typed getters for `int`, `long`, `double`, and `boolean`
+- Default values for missing keys
 
 ## Why Envy exists
 
-Java applications often need configuration from different places: local files, OS environment variables, and JVM system properties. Envy keeps that idea intentionally small: no framework required, no hidden magic, just predictable lookup rules and a small API.
+Java applications often need configuration from multiple places: local files, environment variables, and JVM system properties. Envy keeps that problem intentionally small and framework-neutral.
 
-## How source priority works
+The goal is simple:
 
-Sources are checked **in the order they are added to the builder**. The first source that contains a value for a given key wins.
+- predictable lookup order
+- minimal API
+- fail-fast for required values
+- convenient defaults for optional values
+
+## Installation
+
+If published as a Maven artifact, the dependency would look like this:
+
+```xml
+<dependency>
+    <groupId>de.domesoft</groupId>
+    <artifactId>envy</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+## Quick Start
 
 ```java
 Envy envy = Envy.builder()
-    .source(new SystemPropertiesSource())
-    .source(new EnvSource())
-    .source(new PropertiesFileSource("app.properties"))
-    .build();
+        .source(new SystemPropertiesSource())
+        .source(new EnvSource())
+        .source(new PropertiesFileSource("app.properties"))
+        .build();
 ```
 
-In this example, the priority is:
-1. **System properties** (highest)
-2. **Environment variables**
-3. **`app.properties`** (lowest)
+## Source Priority
 
-If `db.host` exists in all three places, Envy returns the value from **system properties** because that source is checked first.
-
-## Required vs optional values
-
-Envy separates **required** configuration from **optional** configuration.
-
-### `require(key)` - Pflichtwerte
-
-Use `require(...)` for values that **must exist** or the application should fail immediately.
+Sources are checked in the order they are added.
 
 ```java
-String host = envy.require("db.host");  // Muss da sein!
+Envy envy = Envy.builder()
+        .source(new SystemPropertiesSource())
+        .source(new EnvSource())
+        .source(new PropertiesFileSource("app.properties"))
+        .build();
 ```
 
-**Throws:** `MissingConfigException` if the key is missing in all sources.
+In this example the lookup order is:
 
-### `getXXX(key)` - Optionale Werte
+1. System properties
+2. Environment variables
+3. `app.properties`
 
-Use typed getters when the value is **optional** or when a default makes sense.
+If the same key exists in multiple sources, the value from the first matching source is returned.
+
+## API Overview
+
+### Optional value lookup
+
+Use `get(key)` when a value may or may not exist.
 
 ```java
-int port = envy.getInt("db.port").orElse(5432);           // 5432 als Fallback
-boolean debug = envy.getBoolean("app.debug").orElse(false); // false als Fallback
+Optional<String> appName = envy.get("app.name");
 ```
 
-**Returns:** `Optional.empty()` if key doesn't exist. **Throws:** `ConfigConversionException` if value can't be converted.
+### Value lookup with default
+
+Use `get(key, defaultValue)` when you want a guaranteed return value.
+
+```java
+String appName = envy.get("app.name", "Default App");
+String missing = envy.get("unknown.key", "fallback");
+```
+
+The default value may also be `null`.
+
+```java
+String optionalKey = envy.get("optional.key", null);
+```
+
+### Required values
+
+Use `require(key)` for values that must exist.
+
+```java
+String dbHost = envy.require("db.host");
+```
+
+If the key is missing in all sources, Envy throws `MissingConfigException`.
+
+## Typed Getters
+
+### Integer
+
+```java
+Optional<Integer> timeout = envy.getInt("app.timeout");
+int timeoutValue = envy.getInt("app.timeout", 30);
+```
+
+### Long
+
+```java
+Optional<Long> maxSize = envy.getLong("app.maxSize");
+long maxSizeValue = envy.getLong("app.maxSize", 1000L);
+```
+
+### Double
+
+```java
+Optional<Double> ratio = envy.getDouble("app.ratio");
+double ratioValue = envy.getDouble("app.ratio", 0.75);
+```
+
+### Boolean
+
+```java
+Optional<Boolean> debug = envy.getBoolean("app.debug");
+boolean debugEnabled = envy.getBoolean("app.debug", false);
+```
+
+## Boolean conversion behavior
+
+Boolean conversion uses Java boolean parsing.
+
+- `"true"` (ignoring case) becomes `true`
+- every other value becomes `false`
+
+Examples:
+
+```java
+envy.getBoolean("feature.enabled");   // "true" -> true
+envy.getBoolean("feature.enabled");   // "TRUE" -> true
+envy.getBoolean("feature.enabled");   // "yes" -> false
+envy.getBoolean("feature.enabled");   // "abc" -> false
+```
+
+## Numeric conversion behavior
+
+If a key exists but cannot be converted to the requested numeric type, Envy throws `ConfigConversionException`.
+
+Example:
+
+```java
+int timeout = envy.getInt("app.timeout").orElseThrow();
+```
+
+If `app.timeout=abc`, a `ConfigConversionException` is thrown.
 
 ## Example `app.properties`
 
-Place `app.properties` **next to `pom.xml`** (for your current `FileInputStream` loader):
+If you use `PropertiesFileSource("app.properties")`, the file should be available via the given file path.
+
+Example:
 
 ```properties
-# app.properties
-db.host=localhost
-db.port=5432
-app.debug=true
 app.name=Envy Demo
 app.timeout=30
+app.debug=true
+db.host=localhost
+db.port=5432
 ```
 
-## Complete Usage Example
+## Example Usage
 
 ```java
-public class Main {
-    public static void main(String[] args) {
-        Envy envy = Envy.builder()
-            .source(new SystemPropertiesSource())
-            .source(new EnvSource())
-            .source(new PropertiesFileSource("app.properties"))
-            .build();
+Envy envy = Envy.builder()
+        .source(new SystemPropertiesSource())
+        .source(new EnvSource())
+        .source(new PropertiesFileSource("app.properties"))
+        .build();
 
-        // Pflichtwerte (fail-fast)
-        String host = envy.require("db.host");
-        
-        // Optionale Werte mit Default
-        int port = envy.getInt("db.port").orElse(5432);
-        boolean debug = envy.getBoolean("app.debug").orElse(false);
-        
-        System.out.println("DB: " + host + ":" + port);
-        System.out.println("Debug: " + debug);
-    }
-}
+String appName = envy.get("app.name", "My App");
+int timeout = envy.getInt("app.timeout", 30);
+boolean debug = envy.getBoolean("app.debug", false);
+String dbHost = envy.require("db.host");
 ```
 
-## When to use `require()` vs `getXXX()`
+## Error Handling
 
-| Pflicht (require) | Optional (getXXX) |
-|-------------------|-------------------|
-| `db.host` | `app.debug` |
-| `api.key` | `timeout` |
-| `kafka.topic` | `max.threads` |
-| `http.port` | `log.level` |
+Envy currently uses two main exceptions:
 
-## Maven coordinates (when published)
+- `MissingConfigException` for missing required keys
+- `ConfigConversionException` for invalid type conversion
 
-```xml
-<groupId>de.domesoft</groupId>
-<artifactId>envy</artifactId>
-<version>0.1.0</version>
+Example:
+
+```java
+String host = envy.require("db.host"); // throws if missing
+int timeout = envy.getInt("app.timeout").orElseThrow(); // throws if invalid
 ```
 
-## Planned Features
+## Testing
 
-- ✅ **MVP**: System Props, ENV, Properties files
-- ⏳ **Next**: Classpath resources (`src/main/resources`)
-- ⏳ **Later**: List support, prefix groups, Record binding
+Typical test cases for Envy include:
+
+- source priority works as expected
+- required values throw when missing
+- default values are returned when keys are missing
+- numeric conversion throws on invalid input
+
+## Roadmap
+
+Possible next improvements:
+
+- `has(key)`
+- classpath resource support
+- prefix-based configuration groups
+- generic converter support
+- stricter boolean parsing
 
 ## License
 
-MIT License (add when publishing)
+MIT License (or your preferred license)

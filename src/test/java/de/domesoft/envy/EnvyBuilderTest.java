@@ -1,5 +1,7 @@
 package de.domesoft.envy;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -7,10 +9,26 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EnvyBuilderTest {
+
+    private String oldTestKey;
+
+    @BeforeEach
+    void setUp() {
+        oldTestKey = System.getProperty("test.key");
+        System.setProperty("test.key", "system-value");
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (oldTestKey == null) {
+            System.clearProperty("test.key");
+        } else {
+            System.setProperty("test.key", oldTestKey);
+        }
+    }
+
     @Test
     void testSystemPropertiesOverrideEnv() {
-        System.setProperty("test.key", "system-value");
-
         Envy envy = Envy.builder()
                 .source(new SystemPropertiesSource())
                 .source(new EnvSource())
@@ -29,5 +47,18 @@ public class EnvyBuilderTest {
                 .build();
 
         assertThrows(MissingConfigException.class, () -> envy.require("missing.key"));
+    }
+
+    @Test
+    void testDefaultValue() {
+        Envy envy = Envy.builder()
+                .source(new SystemPropertiesSource())
+                .source(new EnvSource())
+                .source(new PropertiesFileSource("app.properties"))
+                .build();
+
+        assertEquals(Optional.of("Envy Demo"), envy.get("app.name"));
+        assertEquals("DEFAULT", envy.get("test.test", "DEFAULT"));
+        assertEquals(30, envy.getInt("app.timeout", 55));
     }
 }
