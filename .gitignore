@@ -1,24 +1,50 @@
-# Compiled class file
-*.class
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
 
-# Log file
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Logs
 *.log
+logs/
 
-# BlueJ files
-*.ctxt
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
