@@ -113,4 +113,24 @@ public class EnvyBuilderTest {
         assertEquals(Optional.of(54325), envy.getInt("port"));
     }
 
+    @Test
+    void testEnvFileSource() {
+        Envy envy = Envy.builder()
+                .source(new EnvFileSource("properties.env"))
+                .build();
+        assertEquals(Optional.of("localhost"), envy.get("db.host"));
+        assertEquals(Optional.of("5050"), envy.get("db.port"));
+    }
+
+    @Test
+    void testEnvOverrideProperty() {
+        Envy envy = Envy.builder()
+                .source(new EnvFileSource("properties.env"))
+                .source(new PropertiesFileSource("app.properties"))
+                .build();
+        assertEquals(Optional.of(5050), envy.getInt("db.port"));
+        assertEquals(Optional.of("Envy Demo"), envy.get("app.name"));
+    }
+
+
 }
