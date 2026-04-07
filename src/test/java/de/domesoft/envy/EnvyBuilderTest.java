@@ -84,4 +84,33 @@ public class EnvyBuilderTest {
         assertEquals(Optional.of("localhorst"), prefixEnvy.get("host"));
         assertEquals("localhorst", prefixEnvy.require("host"));
     }
+
+    @Test
+    void testDirectPrefixEnvyBuilder() {
+        Envy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .prefix("db")
+                .build();
+        assertEquals(Optional.of(54325), envy.getInt("port"));
+        assertThrows(MissingConfigException.class, () -> envy.require("log"));
+    }
+
+    @Test
+    void testInvalidPrefix() {
+        Envy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .prefix("dB")
+                .build();
+        assertEquals(Optional.empty(), envy.getInt("port"));
+    }
+
+    @Test
+    void testValidPrefixWithWhitespaces() {
+        Envy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .prefix("  db  ")
+                .build();
+        assertEquals(Optional.of(54325), envy.getInt("port"));
+    }
+
 }
