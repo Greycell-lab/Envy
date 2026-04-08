@@ -5,11 +5,26 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.Properties;
 
+/**
+ * Configuration source that loads properties from a file on the classpath.
+ * The properties file is loaded once during construction and cached for subsequent lookups.
+ *
+ * <p>Example usage:</p>
+ * <pre>
+ * var source = new ClasspathPropertiesSource("app.properties");
+ * </pre>
+ */
 public class ClasspathPropertiesSource implements ConfigSource {
 
     private final Properties properties = new Properties();
     private final String resourceName;
 
+    /**
+     * Creates a new ClasspathPropertiesSource that loads the specified resource from the classpath.
+     *
+     * @param resourceName the name of the resource file on the classpath (e.g., "app.properties")
+     * @throws IllegalArgumentException if the resource cannot be found or loaded
+     */
     public ClasspathPropertiesSource(String resourceName) {
         this.resourceName = resourceName;
         load(resourceName);

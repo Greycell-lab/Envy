@@ -29,10 +29,10 @@ public class EnvyBuilderTest {
 
     @Test
     void testSystemPropertiesOverrideEnv() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new SystemPropertiesSource())
                 .source(new EnvSource())
-                .source(new PropertiesFileSource("app.properties"))
+                .source(new PropertiesFileSource("src/test/resources/app.properties"))
                 .build();
 
         assertEquals("system-value", envy.require("test.key"));
@@ -42,7 +42,7 @@ public class EnvyBuilderTest {
 
     @Test
     void testRequireThrowsOnMissing() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new SystemPropertiesSource())
                 .build();
 
@@ -51,20 +51,20 @@ public class EnvyBuilderTest {
 
     @Test
     void testDefaultValue() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new SystemPropertiesSource())
                 .source(new EnvSource())
-                .source(new PropertiesFileSource("app.properties"))
+                .source(new PropertiesFileSource("src/test/resources/app.properties"))
                 .build();
 
         assertEquals(Optional.of("Envy Demo"), envy.get("app.name"));
         assertEquals("DEFAULT", envy.get("test.test", "DEFAULT"));
-        assertEquals(30, envy.getInt("app.timeout", 55));
+        assertEquals(50, envy.getInt("app.timeout", 55));
     }
 
     @Test
     void testClasspathPropertiesSource() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new ClasspathPropertiesSource("app.properties"))
                 .build();
 
@@ -75,7 +75,7 @@ public class EnvyBuilderTest {
 
     @Test
     void testPrefixEnvy() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new ClasspathPropertiesSource("app.properties"))
                 .build();
         PrefixEnvy prefixEnvy = new PrefixEnvy(envy, "db.");
@@ -83,11 +83,13 @@ public class EnvyBuilderTest {
         assertEquals(Optional.of(54325), prefixEnvy.getInt("port"));
         assertEquals(Optional.of("localhorst"), prefixEnvy.get("host"));
         assertEquals("localhorst", prefixEnvy.require("host"));
+        assertEquals(54325, prefixEnvy.requireInt("port"));
+        assertEquals(54325L, prefixEnvy.requireLong("port"));
     }
 
     @Test
     void testDirectPrefixEnvyBuilder() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new ClasspathPropertiesSource("app.properties"))
                 .prefix("db")
                 .build();
@@ -97,7 +99,7 @@ public class EnvyBuilderTest {
 
     @Test
     void testInvalidPrefix() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new ClasspathPropertiesSource("app.properties"))
                 .prefix("dB")
                 .build();
@@ -106,7 +108,7 @@ public class EnvyBuilderTest {
 
     @Test
     void testValidPrefixWithWhitespaces() {
-        Envy envy = Envy.builder()
+        ConfigurableEnvy envy = Envy.builder()
                 .source(new ClasspathPropertiesSource("app.properties"))
                 .prefix("  db  ")
                 .build();
@@ -115,8 +117,8 @@ public class EnvyBuilderTest {
 
     @Test
     void testEnvFileSource() {
-        Envy envy = Envy.builder()
-                .source(new EnvFileSource("properties.env"))
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new EnvFileSource("src/test/resources/properties.env"))
                 .build();
         assertEquals(Optional.of("localhost"), envy.get("db.host"));
         assertEquals(Optional.of("5050"), envy.get("db.port"));
@@ -124,13 +126,51 @@ public class EnvyBuilderTest {
 
     @Test
     void testEnvOverrideProperty() {
-        Envy envy = Envy.builder()
-                .source(new EnvFileSource("properties.env"))
-                .source(new PropertiesFileSource("app.properties"))
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new EnvFileSource("src/test/resources/properties.env"))
+                .source(new PropertiesFileSource("src/test/resources/app.properties"))
                 .build();
         assertEquals(Optional.of(5050), envy.getInt("db.port"));
         assertEquals(Optional.of("Envy Demo"), envy.get("app.name"));
     }
 
+    @Test
+    void testRequireInt() {
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
 
+        assertEquals(54325, envy.requireInt("db.port"));
+        assertThrows(MissingConfigException.class, () -> envy.requireInt("missing.key"));
+    }
+
+    @Test
+    void testRequireLong() {
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
+
+        assertEquals(54325L, envy.requireLong("db.port"));
+        assertThrows(MissingConfigException.class, () -> envy.requireLong("missing.key"));
+    }
+
+    @Test
+    void testRequireDouble() {
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
+
+        assertEquals(50.0, envy.requireDouble("app.timeout"));
+        assertThrows(MissingConfigException.class, () -> envy.requireDouble("missing.key"));
+    }
+
+    @Test
+    void testRequireBoolean() {
+        ConfigurableEnvy envy = Envy.builder()
+                .source(new ClasspathPropertiesSource("app.properties"))
+                .build();
+
+        assertEquals(false, envy.requireBoolean("app.debug"));
+        assertThrows(MissingConfigException.class, () -> envy.requireBoolean("missing.key"));
+    }
 }
