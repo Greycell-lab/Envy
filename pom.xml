@@ -4,7 +4,7 @@
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.domesoft</groupId>
+    <groupId>com.greycelllab</groupId>
     <artifactId>envy</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
