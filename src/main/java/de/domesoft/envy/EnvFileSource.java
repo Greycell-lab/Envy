@@ -9,12 +9,10 @@ import java.util.Properties;
 public class EnvFileSource implements ConfigSource {
 
     private final Properties properties = new Properties();
-    private final String path;
 
     public EnvFileSource(String path) {
 
-        this.path = path;
-        loadProperties(this.path);
+        loadProperties(path);
     }
 
     @Override
