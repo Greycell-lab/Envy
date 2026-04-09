@@ -1,4 +1,4 @@
-package de.domesoft.envy;
+package io.github.greycelllab.envy;
 
 import java.util.ArrayList;
 import java.util.List;

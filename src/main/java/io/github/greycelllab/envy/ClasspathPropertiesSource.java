@@ -1,4 +1,4 @@
-package de.domesoft.envy;
+package io.github.greycelllab.envy;
 
 import java.io.IOException;
 import java.io.InputStream;

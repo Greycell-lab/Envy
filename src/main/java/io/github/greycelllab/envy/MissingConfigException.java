@@ -1,4 +1,4 @@
-package de.domesoft.envy;
+package io.github.greycelllab.envy;
 
 /**
  * Exception thrown when a required configuration key is not found in any of the configured sources.

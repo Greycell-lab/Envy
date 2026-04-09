@@ -1,4 +1,4 @@
-package de.domesoft.envy;
+package io.github.greycelllab.envy;
 
 /**
  * Exception thrown when a configuration value exists but cannot be converted to the requested type.
